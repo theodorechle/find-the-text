@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="style.css">
+        <script src="code.js"></script>
+        <title>Complète le texte.</title>
+    </head>
+    <body onload="begin()">
+        <button><a href="/create_account/">Créer un compte</a></button>
+        <input id="name" type="text" size="50" placeholder="Titre du texte">
+        <textarea id="text" rows="20" cols="20" name="text_to_learn" autofocus placeholder="Texte." spellcheck="false"></textarea>
+        <button id="start_button" onclick="start()">Commencer</button>
+        <button id="restart_button" onclick="restart()">Recommencer</button>
+        <div class="timer" id="text_timer" data-time="5">00:00</div>
+        <input id="new_word" onkeydown="submit_word(event)" disabled type="text">
+        <div class="text-container">
+            <pre id="entire_name"></pre>
+            <pre id="entire_text"></pre>
+        </div>
+    </body>
+</html>

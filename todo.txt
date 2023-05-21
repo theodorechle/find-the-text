@@ -1,0 +1,8 @@
+Rester connecté, sauvegarder si connecté, sinon non
+Si pas connecté et appui sur bouton sauvegarde, proposer connection
+
+Attention : pas suppression texte et titre si connection ou page de connection (sauvegarder sur le serveur temporairement)
+
+
+Un fichier avec les identifiants de connection pour pouvoir rester connecté après un arrêt du serveur
+Deux boutons pour augmenter et diminuer le nombre de minutes et deux pour les secondes (possibilité de l'écrire à la main ?)

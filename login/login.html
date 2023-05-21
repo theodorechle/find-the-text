@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="login_style.css">
+        <script src="login_script.js"></script>
+        <title>Login</title>
+    </head>
+    <body>
+        <label class="error" id="error" hidden>Nom d'utilisateur ou mot de passe non valide</label>
+        <div id="login_box">
+            <br>
+            <label for="username">Nom d'utilisateur</label>
+            <br>
+            <input id="username" type="text" name="username" autofocus/>
+            <br>
+            <br>
+            <label for="password">Mot de passe</label>
+            <br>
+            <input id="password" type="password" name="password"/>
+            <br>
+            <button id="send_button" onclick="Submit()">Créer</button>
+        </div>
+    </body>
+</html>
