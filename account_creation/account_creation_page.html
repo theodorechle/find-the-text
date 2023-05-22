@@ -7,8 +7,10 @@
         <title>Account creation</title>
     </head>
     <body>
+        <br>
         <label id="empty_error" hidden>Le nom d'utilisateur ou le mot de passe est vide.</label>
         <div id="creation_box">
+            <label class="error" for="username" id="length_error" hidden>25 caractères max</label>
             <label class="error" for="username" id="username_error" hidden>Déjà utilisé</label>
             <br>
             <label for="username">Nom d'utilisateur</label>

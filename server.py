@@ -108,6 +108,17 @@ class MyServer(BaseHTTPRequestHandler):
                 with open("login/login_script.js", encoding='utf-8') as file:
                     self.wfile.write(bytes(file.read(), 'utf-8'))
                 return
+            elif path  == "/login_anonym":
+                self.send_response(200)
+                keys = texts.keys()
+                key = -choice([i for i in range(NB_MAX_USERS) if i not in keys])
+                connections[key] = key
+                append_to_connections_file(connections)
+                self.send_response(200)
+                self.send_header("Content-type", "text/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(bytes(json.dumps({"token": key}),"utf-8"))
+                return
 
         self.send_response(404)
         self.send_header("Content-type", "text/html")
@@ -120,6 +131,7 @@ class MyServer(BaseHTTPRequestHandler):
         self.wfile.write(bytes("</body></html>", "utf-8"))
 
     def do_POST(self):
+        print(self.path)
         if self.path == "/game/new_text":
             length = int(self.headers['content-length'])
             raw = self.rfile.read(length).decode()
@@ -129,7 +141,6 @@ class MyServer(BaseHTTPRequestHandler):
             name_sizes = game.to_list(name)
             text_sizes = game.to_list(text)
             texts[id] = {"name": name, "text": text, "name_sizes": name_sizes, "text_sizes": text_sizes, "timer": timer}
-            append_to_texts_file(texts)
             name_dict = game.to_dict(name_sizes)
             text_dict = game.to_dict(text_sizes)
             self.send_response(200)
@@ -212,15 +223,16 @@ class MyServer(BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/json; charset=utf-8")
             self.end_headers()
             self.wfile.write(bytes(db_texts, 'utf-8'))
-        
-def append_to_texts_file(texts: dict):
-    with open("texts.txt", "w") as f:
-        json.dump(texts, f)
+        elif self.path == "/game/disconnect":
+            length = int(self.headers['content-length'])
+            raw_token = self.rfile.read(length).decode()
+            token = json.loads(raw_token)
+            print(int(token["token"]    ))
+            connections.pop(int(token["token"]))
+            print(token, connections)
+            self.send_response(200)
+            self.end_headers()
 
-def read_from_texts_file():
-    with open("texts.txt", "r") as f:
-        texts = json.load(f)
-    return {int(key): value for key, value in texts.items()}
 
 def append_to_connections_file(connections: dict):
     with open("connections.txt", "w") as f:
@@ -234,7 +246,7 @@ def read_from_connections_file():
 
 NB_MAX_USERS = 100
 connections = read_from_connections_file()
-texts = read_from_texts_file()
+texts = {}
 
 
 if __name__ == "__main__":        

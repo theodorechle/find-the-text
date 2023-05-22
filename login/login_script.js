@@ -11,6 +11,7 @@ function Submit() {
         return res.json()})
     .then(
     res => {
+            disconnect()
             sessionStorage.setItem("connection_token",res.token);
             window.location.assign("/game/");
     })
@@ -21,6 +22,13 @@ function check_enter(event) {
     if (event.key === "Enter") {
         Submit()
     }
+}
+
+function disconnect() {
+    const options = {method: "POST", headers: {"Content-type":"text/json"}, body: JSON.stringify({"token": sessionStorage.getItem("connection_token")})}
+    fetch("/game/disconnect", options)
+    sessionStorage.removeItem("connection_token")
+    window.location.assign("/game/")
 }
 
 window.onload = () => {

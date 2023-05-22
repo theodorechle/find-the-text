@@ -43,6 +43,13 @@
     transform: translate(-50%, 0%);
 }
 
+#save_button {
+    position: absolute;
+    top: 460px;
+    left: 50%;
+    transform: translate(-50%, 0%);
+}
+
 #new_word {
     position: absolute;
     top: 420px;
@@ -95,6 +102,10 @@ td {
     left: 1045px;
 }
 
+#texts>tr>td>div {
+    cursor: pointer;
+}
+
 #text_timer {
     position: absolute;
     top: 400px;
@@ -104,4 +115,16 @@ td {
 .scrollbox {
     overflow: scroll;
     height: 50px;
+}
+
+#col1 {
+    width: 300px;
+}
+
+#col2 {
+    width: 480px;
+}
+
+#col3 {
+    width: 30px;
 }

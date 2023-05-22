@@ -1,17 +1,21 @@
 var timer_interval;
 
 function create_button() {
-    if (sessionStorage.getItem("connection_token")) {
+    token = sessionStorage.getItem("connection_token")
+    console.log("token : ", token)
+    if (token != null && token >= 0) {
             connection = document.createElement("button");
             connection.onclick = disconnect
             connection.innerHTML = "Déconnexion";
             document.body.appendChild(connection);
-            save_button = document.createElement("button");
-            save_button.onclick = save
-            save_button.innerHTML = "Sauvegarder le texte";
-            document.body.appendChild(save_button);
     }
     else {
+        connection = document.createElement("button");
+        link = document.createElement("a");
+        link.href = "/create_account/";
+        link.text = "Créer un compte";
+        connection.appendChild(link);
+        document.body.appendChild(connection);
         connection = document.createElement("button");
         link = document.createElement("a");
         link.href = "/login/";
@@ -22,8 +26,16 @@ function create_button() {
 }
 
 function disconnect() {
+    console.log("token : ", sessionStorage.getItem("connection_token"))
+    const options = {method: "POST", headers: {"Content-type":"text/json"}, body: JSON.stringify({"token": sessionStorage.getItem("connection_token")})}
+    fetch("/game/disconnect", options)
+    .then( () => {
+    console.log(1, sessionStorage.getItem("connection_token"))
     sessionStorage.removeItem("connection_token")
+    console.log(2, sessionStorage.getItem("connection_token"))
     window.location.assign("/game/")
+    console.log(3, sessionStorage.getItem("connection_token"))
+    })
 }
 
 function start() {
@@ -175,9 +187,9 @@ function save() {
     }
     if (text != "" && name != "") {
         const body = {name, text, token, timer};
-    const options = {method: "POST", headers: {"Content-Type":"text/json"},body: JSON.stringify(body)}
-    fetch('/game/save', options)
-    .then(
+        const options = {method: "POST", headers: {"Content-Type":"text/json"},body: JSON.stringify(body)}
+        fetch('/game/save', options)
+        .then(
         saved_texts()
         )
     }
@@ -185,30 +197,7 @@ function save() {
     
 function saved_texts() {
     if (sessionStorage.getItem("connection_token")) {
-        const table = document.createElement("table")
-        const colgroup = document.createElement("colgroup")
-        let col1 = document.createElement("col")
-        col1.width = "300px"
-        let col2 = document.createElement("col")
-        col2.width = "480px"
-        let col3 = document.createElement("col")
-        col3.width = "30px"
-        colgroup.appendChild(col1)
-        colgroup.appendChild(col2)
-        colgroup.appendChild(col3)
-        table.appendChild(colgroup)
-        table.id = "texts"
-        const tr = document.createElement("tr")
-        const title = document.createElement("th")
-        title.innerHTML = "Titre"
-        tr.appendChild(title)
-        const text = document.createElement("th")
-        text.innerHTML = "Texte"
-        tr.appendChild(text)
-        const timer = document.createElement("th")
-        timer.innerHTML = "Minuteur"
-        tr.appendChild(timer)
-        table.appendChild(tr)
+        table = document.getElementById("texts")
         const options = {method: "POST", headers: {"Content-Type":"text/plain"},body: sessionStorage.getItem("connection_token")}
         fetch("/game/texts_db", options)
         .then(res => res.json())
@@ -253,7 +242,17 @@ function click_on_table(event) {
     }
 }
 
+function create_anonymous_token() {
+    fetch('/login/login_anonym')
+    .then(res => {
+        return res.json()})
+    .then(res => {
+        sessionStorage.setItem("connection_token",res.token);
+    })
+}
+
 function begin() {
+    if (!sessionStorage.getItem("connection_token")) {create_anonymous_token()}
     create_button()
     saved_texts()
     document.getElementById("text_timer").addEventListener(
