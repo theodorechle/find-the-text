@@ -2,7 +2,9 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from random import choice
 from threading import Timer
-import json
+from time import time_ns
+import json, os, uuid
+
 
 import database_manager as d_m
 import game
@@ -38,7 +40,35 @@ class RepeatedTimer(object):
 
 
 class MyServer(BaseHTTPRequestHandler):
+
+    def serve_file(self,filename):
+        if os.path.isfile(filename):
+            self.send_response(200)
+            self.send_header("Content-type", "text/html; charset=utf-8")
+            self.end_headers()
+            with open(filename, encoding='utf-8') as file:
+                self.wfile.write(bytes(file.read(), "utf-8"))
+            return
+
+
     def do_GET(self):
+        # path = self.path.split('/')[1:] 
+        # if len(path) > 0:
+        #   if os.path.isdir(path[0]):
+        #       if len(path) > 1:
+        #           filename = os.path.join(path[0],path[1], ".html")
+        #           if os.path.isfile(filename):
+        #             return self.serve_file(filename)
+        #       else:
+        #             return self.serve_file(filename)
+        # filename = os.path.join(path[0],"404.html")
+        # return self.serve_file(filename)
+
+
+
+
+
+
         if self.path.startswith("/game"):
             path = self.path.removeprefix("/game")
             if path == "/":
@@ -110,10 +140,10 @@ class MyServer(BaseHTTPRequestHandler):
                 return
             elif path  == "/login_anonym":
                 self.send_response(200)
-                keys = texts.keys()
-                key = -choice([i for i in range(NB_MAX_USERS) if i not in keys])
-                connections[key] = key
-                append_to_connections_file(connections)
+                key = new_temp_key()
+                d_m.add_user(str(key), "")
+                db_key = d_m.connect(str(key), "")
+                d_m.update_user_temp_key(db_key, key)
                 self.send_response(200)
                 self.send_header("Content-type", "text/json; charset=utf-8")
                 self.end_headers()
@@ -131,7 +161,6 @@ class MyServer(BaseHTTPRequestHandler):
         self.wfile.write(bytes("</body></html>", "utf-8"))
 
     def do_POST(self):
-        print(self.path)
         if self.path == "/game/new_text":
             length = int(self.headers['content-length'])
             raw = self.rfile.read(length).decode()
@@ -176,10 +205,8 @@ class MyServer(BaseHTTPRequestHandler):
             parsed = json.loads(raw)
             db_key = d_m.connect(parsed['username'], parsed['password'])
             if db_key != None:
-                keys = texts.keys()
-                key = choice([i for i in range(NB_MAX_USERS) if i not in keys])
-                connections[key] = db_key
-                append_to_connections_file(connections)
+                key = new_temp_key()
+                d_m.update_user_temp_key(db_key, key)
                 self.send_response(200)
                 self.send_header("Content-type", "text/json; charset=utf-8")
                 self.end_headers()
@@ -196,7 +223,7 @@ class MyServer(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-type", "text/json; charset=utf-8")
                 self.end_headers()
-                value = {"name": texts[id]["name"], "text": texts[id]["text"]}
+                value = {"name": texts[id]["name"], "text": texts[id]["text"], "timer": texts[id]["timer"]}
                 self.wfile.write(bytes(json.dumps(value), 'utf-8'))
             else:
                 self.send_response(401)
@@ -204,21 +231,26 @@ class MyServer(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(bytes(json.dumps({}), 'utf-8'))
             return
+        elif self.path == "/get_text_infos":
+            length = int(self.headers['content-length'])
+            id = int(self.rfile.read(length).decode())
+            self.send_response(200)
+            self.send_header("Content-type", "text/json; charset=utf-8")
+            self.end_headers()
+            value = d_m.get_text_infos(id)
+            self.wfile.write(bytes(json.dumps({"text":value[0],"timer":value[1]}), 'utf-8'))
+            return
         elif self.path == "/game/save":
             length = int(self.headers['content-length'])
             raw = self.rfile.read(length).decode()
             parsed = json.loads(raw)
-            #print(parsed["token"], connections[int(parsed["token"])])
-            #print(parsed)
-            d_m.add_to_database(parsed["name"], parsed["text"], connections[int(parsed["token"])], int(parsed["timer"]))
+            d_m.add_to_database(parsed["name"], parsed["text"], parsed["token"], int(parsed["timer"]))
             self.send_response(200)
             self.end_headers()
         elif self.path == "/game/texts_db":
             length = int(self.headers['content-length'])
-            key = int(self.rfile.read(length).decode())
-            #print(key, connections)
-            db_texts = json.dumps(d_m.get_from_database(connections[key]))
-            #print(db_texts)
+            key = self.rfile.read(length).decode()
+            db_texts = json.dumps(d_m.get_texts_keys(key))
             self.send_response(200)
             self.send_header("Content-type", "text/json; charset=utf-8")
             self.end_headers()
@@ -227,25 +259,20 @@ class MyServer(BaseHTTPRequestHandler):
             length = int(self.headers['content-length'])
             raw_token = self.rfile.read(length).decode()
             token = json.loads(raw_token)
-            print(int(token["token"]    ))
-            connections.pop(int(token["token"]))
-            print(token, connections)
+            d_m.disconnect(token["token"])
+            self.send_response(200)
+            self.end_headers()
+        elif self.path == "/delete":
+            length = int(self.headers['content-length'])
+            key = self.rfile.read(length).decode()
+            d_m.remove(key)
             self.send_response(200)
             self.end_headers()
 
-
-def append_to_connections_file(connections: dict):
-    with open("connections.txt", "w") as f:
-        json.dump(connections, f)
-
-def read_from_connections_file():
-    with open("connections.txt", "r") as f:
-        connections = json.load(f)
-    return {int(key): value for key, value in connections.items()}
-
+def new_temp_key():
+    return str(time_ns())+uuid.uuid4().hex
 
 NB_MAX_USERS = 100
-connections = read_from_connections_file()
 texts = {}
 
 

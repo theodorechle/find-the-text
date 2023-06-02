@@ -2,10 +2,6 @@
     background-color: black;
 }
 
-.not-found {
-    background-color: red;
-}
-
 #entire_name {
     font-size: 39px;
     line-height: 1.5em;
@@ -21,7 +17,6 @@
     transform: translate(-50%, 0%);
     top: 80px;
 }
-
 
 #name {
     position: absolute;
@@ -50,15 +45,14 @@
     transform: translate(-50%, 0%);
 }
 
-#new_word {
-    position: absolute;
-    top: 420px;
-}
-
 #win {
     position: absolute;
     font-size: 39px;
     top:100px;
+}
+
+.not-found {
+    background-color: rgb(240, 7, 7);
 }
 
 a:link {
@@ -92,39 +86,71 @@ th {
     padding: 1px 10px;
 }
 
-td {
+#texts {
+    position: absolute;
+    table-layout: fixed;
+    /* width: 400px; */
+    top: 100px;
+    left: 1045px;
+
+}
+td>div {
+    width: 400px;
     overflow: hidden;
 }
 
-#texts {
-    position: absolute;
-    top: 100px;
-    left: 1045px;
-}
-
-#texts>tr>td>div {
+#texts>tr>td {
     cursor: pointer;
 }
 
 #text_timer {
     position: absolute;
-    top: 400px;
+    top: 383px;
     left: 175px;
 }
 
-.scrollbox {
-    overflow: scroll;
+#new_word {
+    position: absolute;
+    top: 420px;
+    left: 193.225px;
+    transform: translate(-50%, 0%);
+}
+
+tr>td {
+    text-align: center;
+    vertical-align: middle;
     height: 50px;
+    overflow: hidden;
 }
 
-#col1 {
-    width: 300px;
+.delete {
+    color: rgb(233, 37, 11);
 }
 
-#col2 {
-    width: 480px;
+#add_button_min {
+    position: absolute;
+    top: 370px;
+    left: 150px;
+    width: 20px;
 }
 
-#col3 {
-    width: 30px;
+#remove_button_min {
+    position: absolute;
+    top: 395px;
+    left: 150px;
+    width: 20px;
+}
+
+#add_button_sec {
+    position: absolute;
+    top: 370px;
+    left: 215px;
+    width: 20px;
+}
+
+#remove_button_sec {
+    position: absolute;
+    top: 395px;
+    left: 215px;
+    width: 20px;
 }

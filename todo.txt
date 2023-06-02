@@ -1,8 +1,11 @@
-Rester connecté, sauvegarder si connecté, sinon non
-Si pas connecté et appui sur bouton sauvegarde, proposer connection
+le nombre de minutes et deux pour les secondes (possibilité de l'écrire à la main ?)
 
-Attention : pas suppression texte et titre si connection ou page de connection (sauvegarder sur le serveur temporairement)
+Problème quand on perd, les mots en rouge ne sont pas affichés.
 
+Fermeture automatique de session si inutilisée
 
-Un fichier avec les identifiants de connection pour pouvoir rester connecté après un arrêt du serveur
-Deux boutons pour augmenter et diminuer le nombre de minutes et deux pour les secondes (possibilité de l'écrire à la main ?)
+GIGA FAILLE DE SECURITE : SI ON CHANGE LA VALEUR DU TOTEM DE CONNECTION, ON PEUT ACCEDER AUX AUTRES COMPTES CONNECTES !!
+
+Changer de token à chaque requête
+Enregistrer token dans db
+Bluefish pour mdp ?

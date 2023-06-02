@@ -51,7 +51,6 @@ function disconnect() {
 }
 
 function check_enter(event) {
-    console.log("yes")
     if (event.key === "Enter") {
         Submit()
     }

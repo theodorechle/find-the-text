@@ -4,10 +4,8 @@ def find_word(word, text):
     word = word.lower()
     indexes = []
     for i, w in enumerate(text):
-        #print("find_word :",w, i, word)
         if w[0].lower() == word:
             indexes += [[i, w[0]]]
-    #print(indexes)
     return indexes
 
 

@@ -6,29 +6,26 @@ function Submit() {
     document.getElementById("error").setAttribute("hidden", "hidden")
     fetch('/login', options)
     .then(res => {
-        console.log(res.status)
-        if (res.status == 401) {document.getElementById("error").removeAttribute("hidden")}
-        return res.json()})
+        if (res.status == 401) {
+            document.getElementById("error").removeAttribute("hidden")
+            return ""}
+        else {return res.json()}})
     .then(
     res => {
-            disconnect()
+        if (res) {
+            const options = {method: "POST", headers: {"Content-type":"text/json"}, body: JSON.stringify({"token": sessionStorage.getItem("connection_token")})}
+            fetch("/game/disconnect", options)
+            .then( () => {
             sessionStorage.setItem("connection_token",res.token);
             window.location.assign("/game/");
-    })
+            })
+    }})
 }
 
 function check_enter(event) {
-    console.log("yes")
     if (event.key === "Enter") {
         Submit()
     }
-}
-
-function disconnect() {
-    const options = {method: "POST", headers: {"Content-type":"text/json"}, body: JSON.stringify({"token": sessionStorage.getItem("connection_token")})}
-    fetch("/game/disconnect", options)
-    sessionStorage.removeItem("connection_token")
-    window.location.assign("/game/")
 }
 
 window.onload = () => {
