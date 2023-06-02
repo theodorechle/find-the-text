@@ -1,3 +1,5 @@
+gérer fichiers pas créés (db, connections)
+
 le nombre de minutes et deux pour les secondes (possibilité de l'écrire à la main ?)
 
 Problème quand on perd, les mots en rouge ne sont pas affichés.
