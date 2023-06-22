@@ -17,6 +17,7 @@ function Submit() {
             fetch("/game/disconnect", options)
             .then( () => {
             sessionStorage.setItem("connection_token",res.token);
+            sessionStorage.removeItem("anonymous")
             window.location.assign("/game/");
             })
     }})

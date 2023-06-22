@@ -1,13 +1,10 @@
 gérer fichiers pas créés (db, connections)
 
-le nombre de minutes et deux pour les secondes (possibilité de l'écrire à la main ?)
-
-Problème quand on perd, les mots en rouge ne sont pas affichés.
-
 Fermeture automatique de session si inutilisée
 
 GIGA FAILLE DE SECURITE : SI ON CHANGE LA VALEUR DU TOTEM DE CONNECTION, ON PEUT ACCEDER AUX AUTRES COMPTES CONNECTES !!
 
 Changer de token à chaque requête
-Enregistrer token dans db
 Bluefish pour mdp ?
+
+Bouton pour supprimer son compte (avec confirmation et message explicatif des données supprimées)

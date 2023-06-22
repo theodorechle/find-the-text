@@ -4,25 +4,25 @@ database = sqlite3.connect("database.db")
 cursor = database.cursor()
 
 def get_key_from_temp_key(temp_key):
-    return list(cursor.execute(f'SELECT key FROM users WHERE temp_key = "{temp_key}"'))[0][0]
+    return cursor.execute(f'SELECT key FROM users WHERE temp_key = ?', (temp_key,)).fetchone()[0]
 
 def add_to_database(name, text, temp_key, timer):
     key = get_key_from_temp_key(temp_key)
-    cursor.execute(f'INSERT INTO Textes(name, text, user_key, timer) VALUES("{name}", "{text}", {key}, {timer})')
+    cursor.execute(f'INSERT INTO Textes(name, text, user_key, timer) VALUES("?", "?", ?, ?)', (name, text, key, timer))
     database.commit()
 
 def get_texts_keys(temp_key):
     user_key = get_key_from_temp_key(temp_key)
-    return list(cursor.execute("SELECT key, name FROM Textes WHERE user_key = ?",(user_key,)))
+    return cursor.execute("SELECT key, name FROM Textes WHERE user_key = ?",(user_key,)).fetchall()
 
 def get_text_infos(id):
-    infos = list(cursor.execute("SELECT text, timer FROM Textes WHERE key = ?", (id,)))
+    infos = cursor.execute("SELECT text, timer FROM Textes WHERE key = ?", (id,)).fetchall()
     return infos[0]
 
 def connect(username, password):
-    name = list(cursor.execute(f'SELECT key, temp_key FROM users WHERE username = ? AND password = ?',(username, password)))
-    if name and name[0][1] == None:
-        return name[0][0]
+    name = cursor.execute(f'SELECT key, temp_key FROM users WHERE username = ? AND password = ?',(username, password)).fetchone()
+    if name and name[1] == None:
+        return name[0]
 
 def is_new_username(username):
     result = cursor.execute(f"SELECT count(*) FROM users WHERE username = '{username}'")
@@ -36,14 +36,28 @@ def add_user(username, password):
         return True
     return False
 
-def update_user_temp_key(db_key, new_token):
-    cursor.execute(f"UPDATE users SET temp_key = '{new_token}' WHERE key = '{db_key}'")
+def update_user_temp_key_from_db_key(db_key, temp_key):
+    cursor.execute(f"UPDATE users SET temp_key = ? WHERE key = ?", (temp_key, db_key))
+    database.commit()
+
+def update_user_temp_key_from_temp_key(old_key, new_key):
+    print(old_key, new_key)
+    cursor.execute("UPDATE users SET temp_key = ? WHERE temp_key = ?", (new_key, old_key))
     database.commit()
 
 def remove(key):
     cursor.execute('DELETE FROM Textes WHERE key = ?', (key,))
     database.commit()
 
-def disconnect(temp_key):
-    cursor.execute("UPDATE users SET temp_key = NULL WHERE temp_key = ?", (temp_key,))
+def delete_account(key):
+    cursor.execute('DELETE FROM users WHERE key = ?', (key,))
+    cursor.execute('DELETE FROM Textes WHERE user_key = ?', (key,))
     database.commit()
+
+def disconnect(temp_key):
+    key = cursor.execute("SELECT key FROM users WHERE temp_key = ? AND password = ''", (temp_key,)).fetchone()
+    if key:
+        delete_account(key[0])
+    else:
+        cursor.execute("UPDATE users SET temp_key = NULL WHERE temp_key = ?", (temp_key,))
+        database.commit()

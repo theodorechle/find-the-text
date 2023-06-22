@@ -21,6 +21,7 @@ function Submit() {
             .then(
             res => {
                 sessionStorage.setItem("connection_token",res.token);
+                sessionStorage.removeItem("anonymous")
                 window.location.assign("/game/")
             })
 

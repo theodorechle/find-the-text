@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="style.css">
+        <script src="code.js"></script>
+        <title>Complète le texte.</title>
+    </head>
+    <body>
+        <label id="win" hidden>Presque !</label>
+        <button onclick="window.location.assign('/game/')">Retour</button>
+        <div class="timer" id="text_timer" hidden></div>
+        <input id="new_word" onkeydown="submit_word(event)" disabled type="text">
+        <button id="start_button" onclick="start(this)">Commencer</button>
+        <button id="pause_button" onclick="change_pause(this)" data-pause="false" hidden>Pause</button>
+        <div class="text-container">
+            <pre id="entire_name"></pre>
+            <pre id="entire_text"></pre>
+        </div>
+    </body>

@@ -1,10 +1,8 @@
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from random import choice
+import json, os, uuid
 from threading import Timer
 from time import time_ns
-import json, os, uuid
-
 
 import database_manager as d_m
 import game
@@ -65,33 +63,52 @@ class MyServer(BaseHTTPRequestHandler):
         # return self.serve_file(filename)
 
 
-
-
-
-
         if self.path.startswith("/game"):
             path = self.path.removeprefix("/game")
             if path == "/":
                 self.send_response(200)
                 self.send_header("Content-type", "text/html; charset=utf-8")
                 self.end_headers()
-                with open('play/index.html', encoding='utf-8') as file:
+                with open('menu/index.html', encoding='utf-8') as file:
                     self.wfile.write(bytes(file.read(), "utf-8"))
-                return
+            
+            elif path == "/style.css":
+                self.send_response(200)
+                self.send_header("Content-type", "text/css; charset=utf-8")
+                self.end_headers()
+                with open('menu/style.css', encoding='utf-8') as file:
+                    self.wfile.write(bytes(file.read(), 'utf-8'))
+            
+            elif path == "/code.js":
+                self.send_response(200)
+                self.send_header("Content-type", "text/javascript; charset=utf-8")
+                self.end_headers()
+                with open('menu/code.js', encoding='utf-8') as file:
+                    self.wfile.write(bytes(file.read(), 'utf-8'))
+            
+        elif self.path.startswith("/play"):
+            path = self.path.removeprefix("/play")
+            if path == "/":
+                self.send_response(200)
+                self.send_header("Content-type", "text/html; charset=utf-8")
+                self.end_headers()
+                with open('play/play.html', encoding='utf-8') as file:
+                    self.wfile.write(bytes(file.read(), "utf-8"))
+            
             elif path == "/style.css":
                 self.send_response(200)
                 self.send_header("Content-type", "text/css; charset=utf-8")
                 self.end_headers()
                 with open('play/style.css', encoding='utf-8') as file:
                     self.wfile.write(bytes(file.read(), 'utf-8'))
-                return
+            
             elif path == "/code.js":
                 self.send_response(200)
                 self.send_header("Content-type", "text/javascript; charset=utf-8")
                 self.end_headers()
                 with open('play/code.js', encoding='utf-8') as file:
                     self.wfile.write(bytes(file.read(), 'utf-8'))
-                return
+            
         elif self.path.startswith("/create_account"):
             path = self.path.removeprefix("/create_account")
             if path == "/":
@@ -100,21 +117,21 @@ class MyServer(BaseHTTPRequestHandler):
                 self.end_headers()
                 with open("account_creation/account_creation_page.html", encoding='utf-8') as file:
                     self.wfile.write(bytes(file.read(), 'utf-8'))
-                return
+            
             elif path == "/style_creation.css":
                 self.send_response(200)
                 self.send_header("Content-type", "text/css; charset=utf-8")
                 self.end_headers()
                 with open("account_creation/style_creation.css", encoding='utf-8') as file:
                     self.wfile.write(bytes(file.read(), 'utf-8'))
-                return
+            
             elif path == "/code_creation.js":
                 self.send_response(200)
                 self.send_header("Content-type", "text/javascript; charset=utf-8")
                 self.end_headers()
                 with open("account_creation/code_creation.js", encoding='utf-8') as file:
                     self.wfile.write(bytes(file.read(), 'utf-8'))
-                return
+            
         elif self.path.startswith("/login"):
             path = self.path.removeprefix("/login")
             if path == "/":
@@ -123,45 +140,73 @@ class MyServer(BaseHTTPRequestHandler):
                 self.end_headers()
                 with open("login/login.html", encoding='utf-8') as file:
                     self.wfile.write(bytes(file.read(), 'utf-8'))
-                return
+            
             elif path == "/login_style.css":
                 self.send_response(200)
                 self.send_header("Content-type", "text/css; charset=utf-8")
                 self.end_headers()
                 with open("login/login_style.css", encoding='utf-8') as file:
                     self.wfile.write(bytes(file.read(), 'utf-8'))
-                return
+            
             elif path == "/login_script.js":
                 self.send_response(200)
                 self.send_header("Content-type", "text/javascript; charset=utf-8")
                 self.end_headers()
                 with open("login/login_script.js", encoding='utf-8') as file:
                     self.wfile.write(bytes(file.read(), 'utf-8'))
-                return
+            
             elif path  == "/login_anonym":
                 self.send_response(200)
                 key = new_temp_key()
                 d_m.add_user(str(key), "")
                 db_key = d_m.connect(str(key), "")
-                d_m.update_user_temp_key(db_key, key)
+                d_m.update_user_temp_key_from_db_key(db_key, key)
                 self.send_response(200)
                 self.send_header("Content-type", "text/json; charset=utf-8")
                 self.end_headers()
                 self.wfile.write(bytes(json.dumps({"token": key}),"utf-8"))
-                return
-
-        self.send_response(404)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
-        self.wfile.write(bytes("<html><head><title>Page not found</title></head>", "utf-8"))
-        self.wfile.write(bytes("<p>Error 404</p>", "utf-8"))
-        self.wfile.write(bytes("<p>Request: %s</p>" % self.path, "utf-8"))
-        self.wfile.write(bytes("<body>", "utf-8"))
-        self.wfile.write(bytes("<p>No route found for this request</p>", "utf-8"))
-        self.wfile.write(bytes("</body></html>", "utf-8"))
+        
+        else:
+            self.send_response(404)
+            self.send_header("Content-type", "text/html")
+            self.end_headers()
+            self.wfile.write(bytes("<html><head><title>Page not found</title></head>", "utf-8"))
+            self.wfile.write(bytes("<p>Error 404</p>", "utf-8"))
+            self.wfile.write(bytes("<p>Request: %s</p>" % self.path, "utf-8"))
+            self.wfile.write(bytes("<body>", "utf-8"))
+            self.wfile.write(bytes("<p>No route found for this request</p>", "utf-8"))
+            self.wfile.write(bytes("</body></html>", "utf-8"))
 
     def do_POST(self):
-        if self.path == "/game/new_text":
+        if self.path == "/create_account":
+            length = int(self.headers['content-length'])
+            raw = self.rfile.read(length).decode()
+            parsed = json.loads(raw)
+            if d_m.add_user(parsed['username'], parsed['password']):
+                self.send_response(201)
+                self.end_headers()
+            else:
+                self.send_response(401)
+                self.end_headers()
+        
+        elif self.path == "/login":
+            length = int(self.headers['content-length'])
+            raw = self.rfile.read(length).decode()
+            parsed = json.loads(raw)
+            db_key = d_m.connect(parsed['username'], parsed['password'])
+            if db_key != None:
+                key = new_temp_key()
+                d_m.update_user_temp_key_from_db_key(db_key, key)
+                self.send_response(200)
+                self.send_header("Content-type", "text/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(bytes(json.dumps({"token": key}),"utf-8"))
+            else:
+                self.send_response(401)
+                self.send_header("Content-type", "text/json; charset=utf-8")
+                self.end_headers()
+        
+        elif self.path == "/game/new_text":
             length = int(self.headers['content-length'])
             raw = self.rfile.read(length).decode()
             parsed = json.loads(raw)
@@ -170,13 +215,54 @@ class MyServer(BaseHTTPRequestHandler):
             name_sizes = game.to_list(name)
             text_sizes = game.to_list(text)
             texts[id] = {"name": name, "text": text, "name_sizes": name_sizes, "text_sizes": text_sizes, "timer": timer}
-            name_dict = game.to_dict(name_sizes)
-            text_dict = game.to_dict(text_sizes)
             self.send_response(200)
             self.send_header("Content-type", "text/json; charset=utf-8")
             self.end_headers()
-            json_sizes = json.dumps({"id": str(id), "name": name_dict, "text": text_dict})
+            key = new_temp_key()
+            d_m.update_user_temp_key_from_temp_key(parsed["token"], key)
+            json_sizes = json.dumps({"id": str(id), "token": str(key)})
             self.wfile.write(bytes(json_sizes,"utf-8"))
+        
+        elif self.path == "/get_text":
+            length = int(self.headers['content-length'])
+            raw = (self.rfile.read(length).decode())
+            parsed = json.loads(raw)
+            id = int(parsed["id"])
+            token = parsed["token"]
+            key = new_temp_key()
+            d_m.update_user_temp_key_from_temp_key(token, key)
+            if id < len(texts):
+                self.send_response(200)
+                self.send_header("Content-type", "text/json; charset=utf-8")
+                self.end_headers()
+                value = {"name": texts[id]["name"], "text": texts[id]["text"], "timer": texts[id]["timer"], "token": key}
+                self.wfile.write(bytes(json.dumps(value), 'utf-8'))
+            else:
+                self.send_response(401)
+                self.send_header("Content-type", "text/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(bytes(json.dumps({"token": key}), 'utf-8'))
+        
+        elif self.path == "/get_indexes":
+            length = int(self.headers['content-length'])
+            raw = self.rfile.read(length).decode()
+            parsed = json.loads(raw)
+            id = int(parsed["id"])
+            token = parsed["token"]
+            text = texts[id]
+            key = new_temp_key()
+            d_m.update_user_temp_key_from_temp_key(token, key)
+            name_sizes = text["name_sizes"]
+            text_sizes = text["text_sizes"]
+            name_dict = game.to_dict(name_sizes)
+            text_dict = game.to_dict(text_sizes)
+            timer = text["timer"]
+            self.send_response(200)
+            self.send_header("Content-type", "text/json; charset=utf-8")
+            self.end_headers()
+            json_sizes = json.dumps({"name": name_dict, "text": text_dict, "timer": timer, "token": key})
+            self.wfile.write(bytes(json_sizes,"utf-8"))
+        
         elif self.path == "/game/submit_word":
             length = int(self.headers['content-length'])
             value = json.loads(self.rfile.read(length).decode())
@@ -189,48 +275,7 @@ class MyServer(BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/json; charset=utf-8")
             self.end_headers()
             self.wfile.write(bytes(sizes, "utf-8"))
-        elif self.path == "/create_account":
-            length = int(self.headers['content-length'])
-            raw = self.rfile.read(length).decode()
-            parsed = json.loads(raw)
-            if d_m.add_user(parsed['username'], parsed['password']):
-                self.send_response(201)
-                self.end_headers()
-            else:
-                self.send_response(401)
-                self.end_headers()
-        elif self.path == "/login":
-            length = int(self.headers['content-length'])
-            raw = self.rfile.read(length).decode()
-            parsed = json.loads(raw)
-            db_key = d_m.connect(parsed['username'], parsed['password'])
-            if db_key != None:
-                key = new_temp_key()
-                d_m.update_user_temp_key(db_key, key)
-                self.send_response(200)
-                self.send_header("Content-type", "text/json; charset=utf-8")
-                self.end_headers()
-                self.wfile.write(bytes(json.dumps({"token": key}),"utf-8"))
-            else:
-                self.send_response(401)
-                self.send_header("Content-type", "text/json; charset=utf-8")
-                self.end_headers()
-                self.wfile.write(bytes("","utf-8"))
-        elif self.path == "/get_text":
-            length = int(self.headers['content-length'])
-            id = int(self.rfile.read(length).decode())
-            if id < len(texts):
-                self.send_response(200)
-                self.send_header("Content-type", "text/json; charset=utf-8")
-                self.end_headers()
-                value = {"name": texts[id]["name"], "text": texts[id]["text"], "timer": texts[id]["timer"]}
-                self.wfile.write(bytes(json.dumps(value), 'utf-8'))
-            else:
-                self.send_response(401)
-                self.send_header("Content-type", "text/json; charset=utf-8")
-                self.end_headers()
-                self.wfile.write(bytes(json.dumps({}), 'utf-8'))
-            return
+        
         elif self.path == "/get_text_infos":
             length = int(self.headers['content-length'])
             id = int(self.rfile.read(length).decode())
@@ -239,7 +284,7 @@ class MyServer(BaseHTTPRequestHandler):
             self.end_headers()
             value = d_m.get_text_infos(id)
             self.wfile.write(bytes(json.dumps({"text":value[0],"timer":value[1]}), 'utf-8'))
-            return
+        
         elif self.path == "/game/save":
             length = int(self.headers['content-length'])
             raw = self.rfile.read(length).decode()
@@ -247,6 +292,7 @@ class MyServer(BaseHTTPRequestHandler):
             d_m.add_to_database(parsed["name"], parsed["text"], parsed["token"], int(parsed["timer"]))
             self.send_response(200)
             self.end_headers()
+        
         elif self.path == "/game/texts_db":
             length = int(self.headers['content-length'])
             key = self.rfile.read(length).decode()
@@ -255,6 +301,7 @@ class MyServer(BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/json; charset=utf-8")
             self.end_headers()
             self.wfile.write(bytes(db_texts, 'utf-8'))
+        
         elif self.path == "/game/disconnect":
             length = int(self.headers['content-length'])
             raw_token = self.rfile.read(length).decode()
@@ -262,6 +309,7 @@ class MyServer(BaseHTTPRequestHandler):
             d_m.disconnect(token["token"])
             self.send_response(200)
             self.end_headers()
+        
         elif self.path == "/delete":
             length = int(self.headers['content-length'])
             key = self.rfile.read(length).decode()
@@ -269,13 +317,18 @@ class MyServer(BaseHTTPRequestHandler):
             self.send_response(200)
             self.end_headers()
 
+
+# FUNCTIONS
 def new_temp_key():
     return str(time_ns())+uuid.uuid4().hex
 
+
+# VARIABLES
 NB_MAX_USERS = 100
 texts = {}
 
 
+# LOOP
 if __name__ == "__main__":        
     webServer = HTTPServer((hostName, serverPort), MyServer)
     print("Server started at http://%s:%s" % (hostName, serverPort))
