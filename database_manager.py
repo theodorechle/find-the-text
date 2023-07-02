@@ -20,8 +20,8 @@ def get_text_infos(id):
     return infos[0]
 
 def connect(username, password):
-    name = cursor.execute(f'SELECT key, temp_key FROM users WHERE username = ? AND password = ?',(username, password)).fetchone()
-    if name and name[1] == None:
+    name = cursor.execute(f'SELECT key FROM users WHERE username = ? AND password = ? AND temp_key IS NULL',(username, password)).fetchone()
+    if name:
         return name[0]
 
 def is_new_username(username):
@@ -41,7 +41,7 @@ def update_user_temp_key_from_db_key(db_key, temp_key):
     database.commit()
 
 def update_user_temp_key_from_temp_key(old_key, new_key):
-    print(old_key, new_key)
+    print(f"{old_key = }, {new_key = }")
     cursor.execute("UPDATE users SET temp_key = ? WHERE temp_key = ?", (new_key, old_key))
     database.commit()
 
@@ -58,6 +58,8 @@ def disconnect(temp_key):
     key = cursor.execute("SELECT key FROM users WHERE temp_key = ? AND password = ''", (temp_key,)).fetchone()
     if key:
         delete_account(key[0])
+        print("account deleted")
     else:
         cursor.execute("UPDATE users SET temp_key = NULL WHERE temp_key = ?", (temp_key,))
         database.commit()
+        print("account disconnected")

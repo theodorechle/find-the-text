@@ -160,6 +160,7 @@ class MyServer(BaseHTTPRequestHandler):
                 key = new_temp_key()
                 d_m.add_user(str(key), "")
                 db_key = d_m.connect(str(key), "")
+                print("login_anonym")
                 d_m.update_user_temp_key_from_db_key(db_key, key)
                 self.send_response(200)
                 self.send_header("Content-type", "text/json; charset=utf-8")
@@ -176,12 +177,16 @@ class MyServer(BaseHTTPRequestHandler):
             self.wfile.write(bytes("<body>", "utf-8"))
             self.wfile.write(bytes("<p>No route found for this request</p>", "utf-8"))
             self.wfile.write(bytes("</body></html>", "utf-8"))
+            return
 
     def do_POST(self):
+        length = int(self.headers['content-length'])
+        raw = self.rfile.read(length).decode()
+        parsed = json.loads(raw)
+        token = parsed["token"]
+        status = 404
+        response = {}
         if self.path == "/create_account":
-            length = int(self.headers['content-length'])
-            raw = self.rfile.read(length).decode()
-            parsed = json.loads(raw)
             if d_m.add_user(parsed['username'], parsed['password']):
                 self.send_response(201)
                 self.end_headers()
@@ -190,132 +195,111 @@ class MyServer(BaseHTTPRequestHandler):
                 self.end_headers()
         
         elif self.path == "/login":
-            length = int(self.headers['content-length'])
-            raw = self.rfile.read(length).decode()
-            parsed = json.loads(raw)
             db_key = d_m.connect(parsed['username'], parsed['password'])
             if db_key != None:
                 key = new_temp_key()
+                print("login")
                 d_m.update_user_temp_key_from_db_key(db_key, key)
+                token = key
                 self.send_response(200)
                 self.send_header("Content-type", "text/json; charset=utf-8")
                 self.end_headers()
-                self.wfile.write(bytes(json.dumps({"token": key}),"utf-8"))
             else:
                 self.send_response(401)
                 self.send_header("Content-type", "text/json; charset=utf-8")
                 self.end_headers()
         
         elif self.path == "/game/new_text":
-            length = int(self.headers['content-length'])
-            raw = self.rfile.read(length).decode()
-            parsed = json.loads(raw)
             id = len(texts)
-            name, text, timer = parsed['name'], parsed['text'], parsed['timer']
-            name_sizes = game.to_list(name)
+            title, text, timer = parsed['title'], parsed['text'], parsed['timer']
+            title_sizes = game.to_list(title)
             text_sizes = game.to_list(text)
-            texts[id] = {"name": name, "text": text, "name_sizes": name_sizes, "text_sizes": text_sizes, "timer": timer}
+            texts[id] = {"title": title, "text": text, "title_sizes": title_sizes, "text_sizes": text_sizes, "timer": timer}
             self.send_response(200)
             self.send_header("Content-type", "text/json; charset=utf-8")
             self.end_headers()
-            key = new_temp_key()
-            d_m.update_user_temp_key_from_temp_key(parsed["token"], key)
-            json_sizes = json.dumps({"id": str(id), "token": str(key)})
-            self.wfile.write(bytes(json_sizes,"utf-8"))
+            response["id"] = str(id)
         
         elif self.path == "/get_text":
-            length = int(self.headers['content-length'])
-            raw = (self.rfile.read(length).decode())
-            parsed = json.loads(raw)
             id = int(parsed["id"])
-            token = parsed["token"]
-            key = new_temp_key()
-            d_m.update_user_temp_key_from_temp_key(token, key)
+            print(f"{id = }, {len(texts) = }")
             if id < len(texts):
                 self.send_response(200)
                 self.send_header("Content-type", "text/json; charset=utf-8")
                 self.end_headers()
-                value = {"name": texts[id]["name"], "text": texts[id]["text"], "timer": texts[id]["timer"], "token": key}
-                self.wfile.write(bytes(json.dumps(value), 'utf-8'))
+                value = {"title": texts[id]["title"], "text": texts[id]["text"], "timer": texts[id]["timer"]}
+                response.update(value)
             else:
                 self.send_response(401)
                 self.send_header("Content-type", "text/json; charset=utf-8")
                 self.end_headers()
-                self.wfile.write(bytes(json.dumps({"token": key}), 'utf-8'))
         
         elif self.path == "/get_indexes":
-            length = int(self.headers['content-length'])
-            raw = self.rfile.read(length).decode()
-            parsed = json.loads(raw)
             id = int(parsed["id"])
-            token = parsed["token"]
             text = texts[id]
-            key = new_temp_key()
-            d_m.update_user_temp_key_from_temp_key(token, key)
-            name_sizes = text["name_sizes"]
+            title_sizes = text["title_sizes"]
             text_sizes = text["text_sizes"]
-            name_dict = game.to_dict(name_sizes)
+            title_dict = game.to_dict(title_sizes)
             text_dict = game.to_dict(text_sizes)
             timer = text["timer"]
             self.send_response(200)
             self.send_header("Content-type", "text/json; charset=utf-8")
             self.end_headers()
-            json_sizes = json.dumps({"name": name_dict, "text": text_dict, "timer": timer, "token": key})
-            self.wfile.write(bytes(json_sizes,"utf-8"))
+            json_sizes = {"title": title_dict, "text": text_dict, "timer": timer}
+            response.update(json_sizes)
         
         elif self.path == "/game/submit_word":
-            length = int(self.headers['content-length'])
-            value = json.loads(self.rfile.read(length).decode())
-            word = value['word']
-            id = int(value['id'])
-            name = game.find_word(word, texts[id]["name_sizes"])
+            word = parsed['word']
+            id = int(parsed['id'])
+            title = game.find_word(word, texts[id]["title_sizes"])
             text = game.find_word(word, texts[id]["text_sizes"])
-            sizes = json.dumps({"name": name, "text": text})
+            sizes = {"title": title, "text": text}
             self.send_response(200)
             self.send_header("Content-type", "text/json; charset=utf-8")
             self.end_headers()
-            self.wfile.write(bytes(sizes, "utf-8"))
+            response.update(sizes)
         
         elif self.path == "/get_text_infos":
             length = int(self.headers['content-length'])
-            id = int(self.rfile.read(length).decode())
+            id = int(parsed["id"])
             self.send_response(200)
             self.send_header("Content-type", "text/json; charset=utf-8")
             self.end_headers()
             value = d_m.get_text_infos(id)
-            self.wfile.write(bytes(json.dumps({"text":value[0],"timer":value[1]}), 'utf-8'))
+            response["text"] = value[0]
+            response["timer"] = value[1]
         
         elif self.path == "/game/save":
-            length = int(self.headers['content-length'])
-            raw = self.rfile.read(length).decode()
-            parsed = json.loads(raw)
-            d_m.add_to_database(parsed["name"], parsed["text"], parsed["token"], int(parsed["timer"]))
+            d_m.add_to_database(parsed["title"], parsed["text"], token, int(parsed["timer"]))
             self.send_response(200)
             self.end_headers()
         
         elif self.path == "/game/texts_db":
-            length = int(self.headers['content-length'])
-            key = self.rfile.read(length).decode()
-            db_texts = json.dumps(d_m.get_texts_keys(key))
+            db_texts = d_m.get_texts_keys(token)
             self.send_response(200)
             self.send_header("Content-type", "text/json; charset=utf-8")
             self.end_headers()
-            self.wfile.write(bytes(db_texts, 'utf-8'))
+            response["texts"] = db_texts
         
         elif self.path == "/game/disconnect":
-            length = int(self.headers['content-length'])
-            raw_token = self.rfile.read(length).decode()
-            token = json.loads(raw_token)
-            d_m.disconnect(token["token"])
+            d_m.disconnect(token)
             self.send_response(200)
             self.end_headers()
         
         elif self.path == "/delete":
-            length = int(self.headers['content-length'])
-            key = self.rfile.read(length).decode()
-            d_m.remove(key)
+            d_m.remove(parsed["key"])
             self.send_response(200)
             self.end_headers()
+        else:
+            return
+        
+        key = new_temp_key()
+        d_m.update_user_temp_key_from_temp_key(token, key)
+        response["token"] = key
+        print(f'Path = {self.path}\nparsed json = {parsed}\nlast token = {token}, new token = {key}')
+        self.wfile.write(bytes(json.dumps(response), 'utf-8'))
+        print("SEND")
+        print()
 
 
 # FUNCTIONS

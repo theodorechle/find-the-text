@@ -2,9 +2,11 @@ gérer fichiers pas créés (db, connections)
 
 Fermeture automatique de session si inutilisée
 
-GIGA FAILLE DE SECURITE : SI ON CHANGE LA VALEUR DU TOTEM DE CONNECTION, ON PEUT ACCEDER AUX AUTRES COMPTES CONNECTES !!
 
 Changer de token à chaque requête
 Bluefish pour mdp ?
 
 Bouton pour supprimer son compte (avec confirmation et message explicatif des données supprimées)
+
+
+Compte anonyme pas supprimé quand on fait une partie

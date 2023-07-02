@@ -19,8 +19,10 @@ function start(button) {
     document.getElementById("pause_button").hidden = false;
     document.getElementById("entire_name").innerHTML = ""
     document.getElementById("entire_text").innerHTML = ""
-    document.getElementById("new_word").value = ""
-    document.getElementById("new_word").disabled = false;
+    input = document.getElementById("new_word")
+    input.value = ""
+    input.disabled = false;
+    input.focus()
     id = sessionStorage.getItem("id")
     token = sessionStorage.getItem("connection_token")
     const body = {id, token}
@@ -29,7 +31,7 @@ function start(button) {
     .then(res => res.json())
     .then(json_indexes => {
         sessionStorage.setItem("connection_token", json_indexes.token)
-        set_indexes(json_indexes.name.indexes, document.getElementById("entire_name"), "n")
+        set_indexes(json_indexes.title.indexes, document.getElementById("entire_name"), "n")
         set_indexes(json_indexes.text.indexes, document.getElementById("entire_text"), "w")
         document.getElementById("text_timer").dataset.time = json_indexes.timer
         document.getElementById("text_timer").hidden = false;
@@ -107,13 +109,15 @@ function find_word() {
     word = word.replaceAll(" ", "");
     if (word == "") {return}
     const id = sessionStorage.getItem("id")
-    const body = {word, id}
+    const token = sessionStorage.getItem("connection_token")
+    const body = {word, id, token}
     answers.push(word)
     answers_index = answers.length
     fetch("/game/submit_word",{method: "POST", headers: {"Content-Type":"text/json"},body: JSON.stringify(body)})
     .then(res => res.json())
     .then(data => {
-        data.name.forEach((value) => {
+        sessionStorage.setItem("connection_token", data.token)
+        data.title.forEach((value) => {
             element = document.getElementById(`n_${value[0]}`)
             element.classList.remove("hide")
             element.innerHTML = value[1]
@@ -199,7 +203,9 @@ function finish() {
     if (!id) {return}
     [].forEach.call(document.getElementsByClassName("min"), (element => element.hidden = false));
     [].forEach.call(document.getElementsByClassName("sec"), (element => element.hidden = false));
-    const options = {method: "POST", headers: {"Content-Type":"text/plain"},body: id}
+    const token = sessionStorage.getItem("connection_token")
+    const body = {id, token}
+    const options = {method: "POST", headers: {"Content-Type":"text/json"}, body: JSON.stringify(body)}
     fetch("/get_text", options)
     .then(
     res => {
@@ -209,27 +215,27 @@ function finish() {
         return res.json()
     })
     .then(res => {
-        if (sessionStorage.getItem("id") != null) {
-        res.name.split(split_chars).filter(Boolean).forEach(
+    sessionStorage.setItem("connection_token", res.token)
+    if (sessionStorage.getItem("id") != null) {
+        //display words not found in the title
+        res.title.split(split_chars).filter(Boolean).forEach(
             (word, index) => {
                 let span = document.getElementById(`n_${index}`)
                 if (span.classList.contains("hide")) {
                     span.classList.remove("hide")
                     span.classList.add("not-found")
                     span.innerHTML = word
-                }
-            }
-        )}
-    res.text.split(split_chars).filter(Boolean).forEach(
+                }})}
+        
+        //display words not found in the text
+        res.text.split(split_chars).filter(Boolean).forEach(
         (word, index) => {
             let span = document.getElementById(`w_${index}`)
             if (span.classList.contains("hide")) {
                 span.classList.remove("hide")
                 span.classList.add("not-found")
                 span.innerHTML = word
-            }
-        }
-    )
+            }})
 })
 }
 

@@ -8,7 +8,7 @@ function Submit() {
     if (username.length < 25) {
     if (username && password) {
     if (password == document.getElementById("password_confirmation").value) {
-        const body = {username, password}
+        const body = {username, password, "token": sessionStorage.getItem("connection_token")}
         const options = {method: "POST", headers: {"Content-Type":"text/json"},body: JSON.stringify(body)}
         fetch('/create_account', options)
         .then(res => {

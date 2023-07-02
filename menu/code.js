@@ -1,43 +1,39 @@
 var change_value_of_timer;
 
-function create_button() {
+function toggle_buttons() {
     const token = sessionStorage.getItem("connection_token")
     if (token != null && !sessionStorage.getItem("anonymous")) {
-            connection = document.createElement("button");
-            connection.onclick = disconnect
-            connection.innerHTML = "Déconnexion";
-            document.body.appendChild(connection);
+        document.getElementById("disconnect_button").hidden = false
     }
     else {
-        connection = document.createElement("button");
-        link = document.createElement("a");
-        link.href = "/create_account/";
-        link.text = "Créer un compte";
-        connection.appendChild(link);
-        document.body.appendChild(connection);
-        connection = document.createElement("button");
-        link = document.createElement("a");
-        link.href = "/login/";
-        link.text = "Connexion";
-        connection.appendChild(link);
-        document.body.appendChild(connection);
-        }
-    saved_texts()
+        document.getElementById("account_creation_button").hidden = false
+        document.getElementById("login_button").hidden = false
+    }
+    return saved_texts()
+    
 }
 
 function disconnect() {
-    const options = {method: "POST", headers: {"Content-type":"text/json"}, body: JSON.stringify({"token": sessionStorage.getItem("connection_token")})}
+    const body = {"token": sessionStorage.getItem("connection_token")}
+    const options = {method: "POST", headers: {"Content-type":"text/json"}, body: JSON.stringify(body)}
     fetch("/game/disconnect", options)
-    .then( () => {
+    .then(res => res.json())
+    .then(() => {
     sessionStorage.removeItem("connection_token")
     sessionStorage.removeItem("id")
-    window.location.assign("/game/")
     })
+    .then(() => {
+    reload_page()
+})}
+
+function reload_page() {
+window.location.href = "/game/"
 }
+
 
 function start() {
     const text = document.getElementById("text").value;
-    const name = document.getElementById("name").value;
+    const title = document.getElementById("title").value;
     let timer = document.getElementById("text_timer")
     if (timer === null) {
         timer = 0
@@ -46,8 +42,8 @@ function start() {
            timer = timer.dataset.time
     }
     const token = sessionStorage.getItem("connection_token")
-    const body = {name, text, timer, token};
-    if (text == "" || name == "") {return}
+    const body = {title, text, timer, token};
+    if (text == "" || title == "") {return}
     const options = {method: "POST", headers: {"Content-Type":"text/json"},body: JSON.stringify(body)}
     fetch("/game/new_text", options)
     .then(res => res.json())
@@ -62,7 +58,7 @@ function start() {
     
 function save() {
     const text = document.getElementById("text").value;
-    const name = document.getElementById("name").value;
+    const title = document.getElementById("title").value;
     const token = sessionStorage.getItem("connection_token")
     let timer = document.getElementById("text_timer")
     if (timer === null) {
@@ -71,8 +67,8 @@ function save() {
     else {
         timer = timer.dataset.time
     }
-    if (text != "" && name != "") {
-        const body = {name, text, token, timer};
+    if (text != "" && title != "") {
+        const body = {title, text, token, timer};
         const options = {method: "POST", headers: {"Content-Type":"text/json"},body: JSON.stringify(body)}
         fetch('/game/save', options)
         .then(
@@ -81,7 +77,7 @@ function save() {
     }
 }
 
-function saved_texts() {
+async function saved_texts() {
     const token = sessionStorage.getItem("connection_token")
     if (token) {
         let table = document.getElementById("texts")
@@ -93,24 +89,31 @@ function saved_texts() {
         tr.appendChild(th1)
         tr.appendChild(th2)
         table.children[1] = [tr]
-        const options = {method: "POST", headers: {"Content-Type":"text/plain"},body: token}
-        fetch("/game/texts_db", options)
+        const options = {method: "POST", headers: {"Content-Type":"text/json"},body: JSON.stringify({token})}
+        return fetch("/game/texts_db", options)
         .then(res => res.json())
-        .then(lines =>
-        lines.forEach(function(item) {
-        const line = table.insertRow(-1)
-        line.id = `${item[0]}`
-        const case1 = line.insertCell(0)
-        const div1 = document.createElement("div")
-        div1.className = "title"
-        div1.innerHTML = item[1]
-        case1.appendChild(div1)
-        const case2 = line.insertCell(  1)
-        case2.className = "delete"
-        case2.innerHTML = "X"
-    }))
+        .then(res => {
+        sessionStorage.setItem("connection_token", res.token)
+        res.texts.forEach(function(item) {
+            const line = table.insertRow(-1)
+            line.id = `${item[0]}`
+            const case1 = line.insertCell(0)
+            const div1 = document.createElement("div")
+            div1.className = "title"
+            div1.innerHTML = item[1]
+            case1.appendChild(div1)
+            const case2 = line.insertCell(1)
+            case2.className = "delete"
+            case2.innerHTML = "X"
+        }
+        )
+    })
+    }
+    else {
+        return new Promise((resolve, reject) => {resolve()})
+    }
 }
-}
+
 
 function click_on_table(event) {
     const clickedRow = event.target.closest("tr");
@@ -124,20 +127,22 @@ function click_on_table(event) {
             )
         }
         else {
-        const options = {method: "POST", headers: {"Content-type": "text/plain"}, body: clickedRow.id}
+        const body = {"id": clickedRow.id, "token": sessionStorage.getItem("connection_token")}
+        const options = {method: "POST", headers: {"Content-type": "text/plain"}, body: JSON.stringify(body)}
         fetch("/get_text_infos", options)
         .then(
             res => {
                 return res.json()
             })
-            .then(res => {
-                document.getElementById("name").value = clickedRow.cells[0].innerText;
-                document.getElementById("text").value = res.text;
-                document.getElementById("text_timer").dataset.time = res.timer;
-                restart_timer()
-        })
+        .then(res => {
+            sessionStorage.setItem("connection_token", res.token)
+            document.getElementById("title").value = clickedRow.cells[0].innerText;
+            document.getElementById("text").value = res.text;
+            document.getElementById("text_timer").dataset.time = res.timer;
+            restart_timer()
+        })}
         }}
-}
+
 
 function create_anonymous_token() {
     fetch('/login/login_anonym')
@@ -150,7 +155,8 @@ function create_anonymous_token() {
 }
 
 function begin() {
-    create_button()
+    toggle_buttons()
+    .then(() => {
     const token = sessionStorage.getItem("connection_token")
     if (!token) {create_anonymous_token()}
     else {
@@ -158,22 +164,24 @@ function begin() {
         const id = sessionStorage.getItem("id")
         sessionStorage.removeItem("anonymous")
         if (id) {
-            const options = {method: "POST", headers: {"Content-Type":"text/plain"},body: JSON.stringify({id, token})}
+            const body = {id, token}
+            const options = {method: "POST", headers: {"Content-Type":"text/plain"},body: JSON.stringify(body)}
             fetch("/get_text", options)
             .then(res => res.json())
             .then(res => {
                 sessionStorage.setItem("connection_token", res.token)
                 if (Object.keys(res).length > 1) {
-                document.getElementById("name").value = res.name
-                document.getElementById("text").value = res.text
-                document.getElementById("text_timer").dataset.time = res.timer
-                restart_timer()
+                    document.getElementById("title").value = res.title
+                    document.getElementById("text").value = res.text
+                    document.getElementById("text_timer").dataset.time = res.timer
+                    restart_timer()
                 }
-        })
+            })
         }
     }
     restart_timer()
     document.getElementById("texts").addEventListener("click",click_on_table);
+})
 }
 
 function set_timer_value(min, sec) {
