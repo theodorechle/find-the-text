@@ -1,0 +1,14 @@
+main page :
+-show user's texts to right
+-allow to delete and modify them
+-allow to create a new one (push in the database)
+
+play :
+-hide title and text
+find a way to send tries to server and to send answers to client
+
+connection :
+-use password php function password_hash
+
+login :
+-use password php function password_verify

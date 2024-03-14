@@ -1,0 +1,18 @@
+.flex-vertical-div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#connection-div {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    gap: 10px;
+}
+
+button > a:visited, button > a {
+    color: black;
+    text-decoration: none;
+}
